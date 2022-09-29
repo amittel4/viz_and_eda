@@ -34,3 +34,106 @@ library(ggridges)
   select(name, id, everything())
 ```
 
+## Let's make a scatterplot
+
+```{r}
+ggplot(weather_df, aes(x=tmin, y=tmax)) +
+  geom_point()
+```
+
+## Let's make the same scatterplot, but different.
+
+```{r}
+weather_df %>%
+  drop_na() %>%
+  ggplot(aes(x=tmin, y=tmax)) +
+  geom_point()
+```
+
+## Let's keep making the same plot but different.
+
+```{r}
+weather_scatterplot =
+  weather_df %>%
+  drop_na() %>%
+  ggplot(aes(x=tmin, y=tmax))
+
+weather_scatterplot +
+  geom_point()
+```
+
+## Let's fancy this up a bit
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=tmin, y=tmax, color = name)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(se = FALSE)
+```
+
+## Maybe make separate panels.
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=tmin, y=tmax, color = name)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+'tmax' vs 'tmin' is boring. Let's spice it up a bit.
+
+```{r}
+weather_df %>%
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp), alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+## Some quick stuff
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=tmin, y=tmax)) +
+  geom_hex()
+```
+
+
+## univariate plots
+
+Histograms, barplots, boxplots, violins...
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=tmax, fill = name)) +
+  geom_histogram(binwidth = 2) +
+  facet_grid(. ~ name)
+```
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=tmax, fill = name)) +
+  geom_density(alpha = 0.3, adjust = 0.4)
+```
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=name, y=tmax, fill = name)) +
+  geom_boxplot()
+```
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=name, y=tmax, fill = name)) +
+  geom_violin()
+```
+
+OR
+
+```{r}
+weather_df %>%
+  ggplot(aes(x=tmax, y=name, fill = name)) +
+  geom_density_ridges()
+```
+
