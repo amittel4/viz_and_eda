@@ -1,0 +1,10 @@
+---
+title: "viz_part_01"
+author: "Aaron Mittel"
+date: "2022-09-29"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
