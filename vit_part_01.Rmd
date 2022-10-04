@@ -137,3 +137,22 @@ weather_df %>%
   geom_density_ridges()
 ```
 
+```{r}
+weather_scatterplot =
+  weather_df %>%
+  ggplot(aes(x=date, y=tmax, color=name)) +
+  geom_point(aes(size=prcp), alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+
+weather_scatterplot
+
+ggsave(
+  "results/weather_scatterplot.pdf", weather_scatterplot,
+  width = 8, height = 5)
+```
+
+```{r, fig.width = 10}
+weather_scatterplot
+```
+
