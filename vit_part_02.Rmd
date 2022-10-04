@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(ggridges)
+library(patchwork)
 ```
 
 ```{r}
@@ -69,5 +70,101 @@ weather_df %>%
     name = "Location",
     discrete = TRUE
   )
+```
+
+## Themes
+
+```{r}
+ggp_weather = 
+weather_df %>%
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .5) +
+  labs(
+    x = "Minimum Daily Temp (C)",
+    y = "Maximum Daily Temp (C)",
+    title = "Scatterplot of daily temp extremes",
+    caption = "Data come from the rnoaa package"
+  ) +
+  viridis::scale_color_viridis(
+    name = "Location",
+    discrete = TRUE
+  )
+```
+
+```{r}
+ggp_weather +
+  theme_bw()
+  theme(legend.position = "bottom")
+```
+
+## Data and Geom
+
+```{r}
+central_park_df = 
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+waikiki_park_df = 
+  weather_df %>% 
+  filter(name == "Waikiki_HA")
+
+ggplot(waikiki_park_df, aes(x = date, y = tmax, color = name)) +
+  geom_point() + 
+  geom_line(data = central_park_df)
+```
+
+## Patchwork...
+
+```{r}
+tmax_tmin_plot =
+  weather_df %>% 
+  ggplot(aes(x=tmin, y=tmax, color = name)) +
+  geom_point() +
+  theme(legend.position = "none")
+
+prcp_density_plot =
+  weather_df %>% 
+  filter(prcp > 0) %>% 
+  ggplot(aes(x=prcp, fill=name)) +
+  geom_density(alpha = 0.5) +
+  theme(legend.position = "none")
+
+seasonality_plot =
+  weather_df %>% 
+  ggplot(aes(x=date, y=tmax, color=name)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "none")
+
+(tmax_tmin_plot + prcp_density_plot) / seasonality_plot
+```
+
+## Data Manipulation
+
+```{r}
+weather_df %>% 
+  mutate(name = fct_reorder(name,tmax)) %>%
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+```
+
+```{r}
+pulse_df = 
+  haven::read_sas("data_import_examples/public_pulse_data.sas7bdat") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    values_to = "bdi",
+    names_prefix = "bdi_score_"
+  ) %>%
+  select(id,visit,everything()) %>%
+  mutate(
+    visit = fct_relevel(visit,"bl")
+  )
+
+pulse_df %>%
+  ggplot(aes(x=visit, y=bdi)) +
+  geom_boxplot()
 ```
 
