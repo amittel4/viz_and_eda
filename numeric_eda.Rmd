@@ -1,0 +1,155 @@
+---
+title: "numeric_eda"
+author: "Aaron Mittel"
+date: "2022-09-29"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Let's import data
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+```
+
+```{r, echo = FALSE, message = FALSE}
+weather_df =  
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USC00519397", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USC00519397 = "Waikiki_HA",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10,
+    month = lubridate::floor_date(date, unit = "month")) %>%
+  select(name, id, everything())
+```
+
+## `group_by`
+
+```{r}
+weather_df %>%
+  group_by(name, month)
+```
+
+## `summarize()`
+
+Let's group and then summarize!
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    n_obs = n()
+  )
+```
+
+can we count in other ways?
+
+```{r}
+weather_df %>% 
+  count(name, month)
+```
+
+don't use `table()` as this is not a dataframe and therefore can't be used for anything else.
+
+```{r, eval = FALSE}
+weather_df %>% 
+  pull(month) %>%
+  table()
+```
+
+you can have mutiple summaries
+
+```{r}
+weather_df %>%
+  group_by(month) %>%
+  summarize(
+    n_obs = n(),
+    n_distinct = n_distinct(date)
+  )
+```
+
+## a brief aside on 2x2 tables
+
+```{r}
+weather_df %>% 
+  mutate(
+    cold = case_when(
+      tmax <  5 ~ "cold",
+      tmax >= 5 ~ "not_cold",
+      TRUE      ~ ""
+  )) %>% 
+  filter(name != "Waikiki_HA") %>% 
+  group_by(name, cold) %>% 
+  summarize(count = n())
+```
+
+```{r}
+weather_df %>% 
+  mutate(cold = case_when(
+    tmax <  5 ~ "cold",
+    tmax >= 5 ~ "not_cold",
+    TRUE     ~ ""
+  )) %>% 
+  filter(name != "Waikiki_HA") %>% 
+  janitor::tabyl(name, cold)
+```
+
+## general summaries
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>% 
+  summarize(
+    n_obs = n(),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    sd_prcp = sd(prcp),
+    median_tmax = median(tmax, na.rm = TRUE)
+  ) %>% view
+```
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>% 
+  summarize(across(prcp:tmin,mean))
+```
+
+This is a dataframe!!!
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) %>%
+  ggplot(aes(x = month, y = mean_tmax, color = name)) + 
+  geom_point() +
+  geom_path()
+```
+
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) %>%
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) %>%
+  knitr::kable(digits = 2)
+```
+
